@@ -7,10 +7,15 @@
     <style>
     canvas {
         image-rendering: pixelated;
-        width: 1000px;
+        width: 500px;
         padding: 20px;
         max-width: 100%;
-    }   
+    }  
+    input {
+        height: 20px;
+        width: 70px;
+        margin: 5px;
+    } 
     .container {
         width: 100%;
         display: flex;
@@ -28,25 +33,57 @@
 <body>
     <div class="container">
         <input type="file" id="imageInput" accept="image/*">
-        <canvas id="canvas" width="1000" height="1000"></canvas>
-        <div style="width: 1000px;max-width: 95%;height: 30px;border-radius: 10px;background: #cccbcb;">
+        <canvas id="canvas"></canvas>
+        <div style="width: 95%;height: 30px;border-radius: 10px;background: #cccbcb;">
             <div id="progressbar"></div>
         </div>
         <p id="progress"></p>
+        <p>Resolution: (Leave blank for native image resolution)</p>
+        <div style="display: flex;align-items: center;">
+            <input type="number" id="xres" value="500">
+            <p>x</p>
+            <input type="number" id="yres">
+        </div>
+        <p>Delay: (ms)</p>
+        <input type="number" id="delay" value="10">
+        <p id="sensvalue">Sensitivity: (10/255)</p>
+        <input type="range" id="sens" min="1" max="255" value="10" style="width: 350px;
+        max-width: 95%;">
+        <p style="text-align: center;color: red;">WARNING: The following option will attempt to download every frame generated. This can cause your browser to crash if you don't put a long enough delay (500ms-1000ms recommended) and enable automatic downloads within your browser!!</p>
+        <div style="display: flex;align-items: center;">
+            <p>Download each image:</p>
+            <input type="checkbox" id="dlcheck" style="width: 20px;">
+        </div>
     </div>
     <script>
         document.getElementById('imageInput').addEventListener('change', handleImage);
         var iname = 0;
         const image = [];
         var image2 = [];
+        var newinterval = "";
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         function handleImage(e) {
             img.onload = function() {
+                xres.disabled = true;
+                yres.disabled = true;
+                if (!xres.value && !yres.value) {
+                    xres.value = img.width;
+                    yres.value = img.height;
+                } else if (!xres.value && yres.value) {
+                    xres.value = Math.floor((yres.value/img.height)*img.width);
+                } else if (xres.value && !yres.value) {
+                    yres.value = Math.floor((xres.value/img.width)*img.height);
+                }
+                console.log(xres.value, yres.value)
+                canvas.width = xres.value;
+                canvas.height = yres.value;
+                canvas.style.width = xres.value+"px";
+                canvas.style.height = yres.value+"px";
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, 1000, 1000);
-                const imageData = ctx.getImageData(0, 0, 1000, 1000);
+                ctx.drawImage(img, 0, 0, xres.value, yres.value);
+                const imageData = ctx.getImageData(0, 0, xres.value, yres.value);
 
                 for (let i = 0; i < imageData.data.length; i += 4) {
                     const red = imageData.data[i];
@@ -58,7 +95,7 @@
                 }
                 image2=image.slice();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                setInterval(function () { draw(); }, 0);
+                newinterval = setInterval(function () { draw(); }, delay.value);
             };
 
             const file = e.target.files[0];
@@ -82,14 +119,18 @@
             a.click();
             document.body.removeChild(a);
         }
-        const buffer = new Uint8ClampedArray(1000 * 1000 * 4);
+        sens.value = 10;
+        sens.oninput = function() {
+            sensvalue.innerText = `Sensitivity: (${this.value}/255)`;
+        } 
         function draw() {
+            const buffer = new Uint8ClampedArray(xres.value * yres.value * 4);
             for (let i = 0; i < image.length; i++) {
                 const randint = random(image2.length);
                 var randpx = image2[randint];
                 if (image[i][4] == 0) {
                     randpx = image[i];
-                } else if (Math.round(image[i][0]/10) == Math.round(randpx[0]/10) && Math.round(image[i][1]/10) == Math.round(randpx[1]/10) && Math.round(image[i][2]/10) == Math.round(randpx[2]/10)) {
+                } else if (Math.floor(image[i][0]/sens.value) == Math.floor(randpx[0]/sens.value) && Math.floor(image[i][1]/sens.value) == Math.floor(randpx[1]/sens.value) && Math.floor(image[i][2]/sens.value) == Math.floor(randpx[2]/sens.value)) {
                     image[i][4] = 0;
                     image2.splice(randint, 1);
                 }
@@ -98,13 +139,18 @@
                 buffer[i*4+2] = randpx[2];
                 buffer[i*4+3] = randpx[3];
             }
-            const imageData = new ImageData(buffer, 1000, 1000);
+            const imageData = new ImageData(buffer, xres.value, yres.value);
             ctx.putImageData(imageData, 0, 0);
             var perdone = (image.length-image2.length)/image.length*100;
             progress.innerText = Math.round(perdone*10)/10+"%";
             progressbar.style.width = perdone+"%";
-            //download(canvas.toDataURL(), iname+".png")
-            //iname++
+            if (dlcheck.checked) {
+                download(canvas.toDataURL(), iname+".png")
+                iname++
+            }
+            if (image2.length == 0) {
+                clearInterval(newinterval); 
+            }
         }
     </script>
 </body>
