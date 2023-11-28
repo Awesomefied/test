@@ -80,7 +80,6 @@
                 canvas.width = xres.value;
                 canvas.height = yres.value;
                 canvas.style.width = xres.value+"px";
-                canvas.style.height = yres.value+"px";
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, xres.value, yres.value);
                 const imageData = ctx.getImageData(0, 0, xres.value, yres.value);
@@ -148,7 +147,7 @@
                 download(canvas.toDataURL(), iname+".png")
                 iname++
             }
-            if (image2.length < 2) {
+            if (image2.length == 0) {
                 clearInterval(newinterval); 
             }
         }
