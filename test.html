@@ -1,17 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Website Name</title>
-<meta content="Awesomefied" property="og:title">
-<meta content="https://awesomefied.com" property="og:url">
-<meta name="twitter:card" content="summary_large_image">
-<meta content="https://pbs.twimg.com/media/FtTAt0raIAAtZ7Y?format=jpg&name=large" property="og:image">
-<meta content="#ae34eb" data-react-helmet="true" name="theme-color">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Display</title>
+    <style>
+    canvas {
+        image-rendering: pixelated;
+        width: 1000px;
+        padding: 20px;
+    }   
+    .container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    #progressbar {
+        height: 100%;
+        width: 0%;
+        background-color: #00c600;
+        border-radius: 10px;
+    }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <input type="file" id="imageInput" accept="image/*">
+        <canvas id="canvas" width="1000" height="1000"></canvas>
+        <div style="width: 1000px;height: 30px;border-radius: 10px;background: #cccbcb;">
+            <div id="progressbar"></div>
+        </div>
+        <p id="progress"></p>
+    </div>
+    <script>
+        document.getElementById('imageInput').addEventListener('change', handleImage);
+        var iname = 0;
+        const image = [];
+        var image2 = [];
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        function handleImage(e) {
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, 1000, 1000);
+                const imageData = ctx.getImageData(0, 0, 1000, 1000);
 
-<h1>This is a Heading</h1>
-<p>This is a paragraph.</p>
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    const red = imageData.data[i];
+                    const green = imageData.data[i + 1];
+                    const blue = imageData.data[i + 2];
+                    const alpha = imageData.data[i + 3];
+                    image.push([red,green,blue,alpha]);
+                    //console.log(`Pixel ${i / 4}: (${red}, ${green}, ${blue}, ${alpha})`);
+                }
+                image2=image.slice();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                setInterval(function () { draw(); }, 0);
+            };
 
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+        }
+        function random(max) {
+            return Math.floor(Math.random() * max);
+        }
+        function download(link, name) {
+            var a = document.createElement('a');
+            a.href = link;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        const buffer = new Uint8ClampedArray(1000 * 1000 * 4);
+        function draw() {
+            for (let i = 0; i < image.length; i++) {
+                const randint = random(image2.length);
+                var randpx = image2[randint];
+                if (image[i][4] == 0) {
+                    randpx = image[i];
+                } else if (Math.round(image[i][0]/10) == Math.round(randpx[0]/10) && Math.round(image[i][1]/10) == Math.round(randpx[1]/10) && Math.round(image[i][2]/10) == Math.round(randpx[2]/10)) {
+                    image[i][4] = 0;
+                    image2.splice(randint, 1);
+                }
+                buffer[i*4] = randpx[0]; // red
+                buffer[i*4+1] = randpx[1]; // green
+                buffer[i*4+2] = randpx[2];
+                buffer[i*4+3] = randpx[3];
+            }
+            const imageData = new ImageData(buffer, 1000, 1000);
+            ctx.putImageData(imageData, 0, 0);
+            var perdone = (image.length-image2.length)/image.length*100;
+            progress.innerText = Math.round(perdone*10)/10+"%";
+            progressbar.style.width = perdone+"%";
+            //download(canvas.toDataURL(), iname+".png")
+            //iname++
+        }
+    </script>
 </body>
 </html>
