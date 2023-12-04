@@ -38,17 +38,26 @@
             <div id="progressbar"></div>
         </div>
         <p id="progress"></p>
+
+        <div>
+            <button onclick="download(canvas.toDataURL(), 'canvas.png')">Save image</button>
+            <button onclick="clearInterval(newinterval);">Cancel</button>
+        </div>
+
         <p>Resolution: (Leave blank for native image resolution)</p>
         <div style="display: flex;align-items: center;">
             <input type="number" id="xres" value="500">
             <p>x</p>
             <input type="number" id="yres">
         </div>
-        <p>Delay: (ms)</p>
-        <input type="number" id="delay" value="10">
+
         <p id="sensvalue">Sensitivity: (10/255)</p>
         <input type="range" id="sens" min="1" max="255" value="10" style="width: 350px;
         max-width: 95%;">
+
+        <p>Delay: (ms)</p>
+        <input type="number" id="delay" value="10">
+
         <p style="text-align: center;color: red;">WARNING: The following option will attempt to download every frame generated. This can cause your browser to crash if you don't put a long enough delay (500ms-1000ms recommended) and enable automatic downloads within your browser!!</p>
         <div style="display: flex;align-items: center;">
             <p>Download each image:</p>
@@ -144,7 +153,7 @@
             progress.innerText = Math.round(perdone*10)/10+"%";
             progressbar.style.width = perdone+"%";
             if (dlcheck.checked) {
-                download(canvas.toDataURL(), iname+".png")
+                download(canvas.toDataURL(), iname+".png");
                 iname++
             }
             if (image2.length == 0) {
