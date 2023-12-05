@@ -7,7 +7,8 @@
     canvas {
         image-rendering: pixelated;
         width: 500px;
-        padding: 20px;
+        padding-top: 20px;
+        padding-bottom: 20px;
         max-width: 100%;
     }
     .container {
@@ -25,7 +26,8 @@
             <canvas id="canvas"></canvas>
         </div>
         <button onclick="download(canvas.toDataURL(), filename+'_encoded.png');">Save Image</button>
-        <textarea id="input" style="width: 500px; height: 100px; max-width: 95%;"></textarea>
+        <textarea id="input" oninput="charlimit();" style="width: 500px; height: 100px; max-width: 95%;"></textarea>
+        <p id="charlimtxt">Character Limit: </p>
         <div>
             <button onclick="decode();">Decypher</button>
             <button onclick="encode();">Encode</button>
@@ -37,6 +39,18 @@
     var image = [];
     const ctx = canvas.getContext('2d');
     var filename = "";
+    function charlimit() {
+        if (image.length == 0) {
+            charlimtxt.innerText = "Character Limit: ";
+            return;
+        }
+        var limit = Math.floor(canvas.width*canvas.height*2/16)-input.value.length.toString().length-1;
+        if (limit > 999999999) {
+            limit = 999999999;
+        }
+        input.value = input.value.slice(0, limit);
+        charlimtxt.innerText = "Character Limit: "+input.value.length+"/"+limit;
+    }
     document.getElementById("imageInput").addEventListener(
     "change",
     (event) => { 
@@ -65,6 +79,7 @@
                 const alpha = imageData.data[i + 3];
                 image.push([red,green,blue,alpha]);
             }
+            charlimit();
         };
     });
     function encode() {
