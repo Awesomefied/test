@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steganography :P</title>
+<style>
+    canvas {
+        image-rendering: pixelated;
+        width: 500px;
+        padding: 20px;
+        max-width: 100%;
+    }
+    .container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <input type="file" id="imageInput" accept="image/*">
+        <div>
+            <canvas id="canvas"></canvas>
+        </div>
+        <button onclick="download(canvas.toDataURL(), filename+'_encoded.png');">Save Image</button>
+        <textarea id="input" style="width: 500px; height: 100px; max-width: 95%;"></textarea>
+        <div>
+            <button onclick="decode();">Decypher</button>
+            <button onclick="encode();">Encode</button>
+        </div>
+    </div>
+
+<script>
+   //(255).toString(2) parseInt(11111111, 2)
+    var image = [];
+    const ctx = canvas.getContext('2d');
+    var filename = "";
+    document.getElementById("imageInput").addEventListener(
+    "change",
+    (event) => { 
+        image = [];
+        const img = new Image();
+        const file = event.target.files[0];
+        filename = file.name;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+            const imageData = ctx.getImageData(0, 0, img.width, img.height);
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const red = imageData.data[i];
+                const green = imageData.data[i + 1];
+                const blue = imageData.data[i + 2];
+                const alpha = imageData.data[i + 3];
+                image.push([red,green,blue,alpha]);
+            }
+        };
+    });
+    function encode() {
+        if (!input.value.trim()) {
+            return;
+        }
+        const buffer = new Uint8ClampedArray(canvas.width * canvas.height * 4);
+        var binary = txt2bin(input.value.length.toString().length.toString())+txt2bin(input.value.length.toString())+txt2bin(input.value);
+        for (let i = 0; i < image.length; i++) {
+            buffer[i*4+3] = image[i][3]; // alpha
+            buffer[i*4+2] = image[i][2]; // blue
+            if (i*2 >= binary.length) {
+                buffer[i*4] = image[i][0]; // red
+                buffer[i*4+1] = image[i][1]; // green
+            } else {
+                buffer[i*4] = parseInt(image[i][0].toString(2).slice(0,-1)+binary[i*2],2); // red
+                buffer[i*4+1] = parseInt(image[i][1].toString(2).slice(0,-1)+binary[i*2+1],2); // green
+            }
+        }
+        const imageData = new ImageData(buffer, canvas.width, canvas.height);
+        ctx.putImageData(imageData, 0, 0);
+    }
+    function decode() {
+        var binary = "";
+        for (let i = 0; i < image.length; i++) {
+            binary += image[i][0].toString(2).slice(-1)+image[i][1].toString(2).slice(-1);
+        } 
+        const txtlen = parseInt(bin2txt(binary.slice(16, parseInt(bin2txt(binary.slice(0,16)))*16+16)));
+        input.value = bin2txt(binary.slice(16, (parseInt(bin2txt(binary.slice(0, 16)))+txtlen+1)*16)).slice(parseInt(bin2txt(binary.slice(0, 16))));
+    }
+    function txt2bin(char) {
+        return char.split('').map(function(codepoint) {
+            return padLeftTo(codepoint.charCodeAt(0).toString(2), 0, 16);
+        }).join('');
+    }
+    function bin2txt(binary) {
+        binary = binary.split("");
+        var codepointsAsNumbers = [];
+        while( binary.length>0 ){
+            var codepointBits = binary.slice(0,16);
+            binary = binary.slice(16);
+            codepointsAsNumbers.push( parseInt(codepointBits.join(''),2) );
+        }
+        return String.fromCharCode.apply(this,codepointsAsNumbers);
+    }
+    function padLeftTo(string, padChar, numChars) {
+        return (new Array(numChars-string.length+1)).join(padChar) + string;
+    }
+    function download(link, name) {
+        var a = document.createElement('a');
+        a.href = link;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+</script>
+</body>
+</html> 
