@@ -89,11 +89,22 @@
     }
     function decode() {
         var binary = "";
+        var oglen;
+        var txtlen;
         for (let i = 0; i < image.length; i++) {
-            binary += image[i][0].toString(2).slice(-1)+image[i][1].toString(2).slice(-1);
+            if (!oglen || !txtlen || binary.length < (txtlen+oglen+1)*16) {
+                binary += image[i][0].toString(2).slice(-1)+image[i][1].toString(2).slice(-1);
+            }
+            if (i == 7) {
+                oglen = parseInt(bin2txt(binary));
+            } else if (i == 8*(oglen+1)-1) {
+                txtlen = parseInt(bin2txt(binary.slice(16)));
+            }
         } 
-        const txtlen = parseInt(bin2txt(binary.slice(16, parseInt(bin2txt(binary.slice(0,16)))*16+16)));
-        input.value = bin2txt(binary.slice(16, (parseInt(bin2txt(binary.slice(0, 16)))+txtlen+1)*16)).slice(parseInt(bin2txt(binary.slice(0, 16))));
+        if (!isNumber(oglen)) {
+            return;
+        }
+        input.value = bin2txt(binary.slice((oglen+1)*16));
     }
     function txt2bin(char) {
         return char.split('').map(function(codepoint) {
