@@ -101,7 +101,7 @@
                 txtlen = parseInt(bin2txt(binary.slice(16)));
             }
         } 
-        if (!isNumber(oglen)) {
+        if (!Number.isInteger(oglen)) {
             return;
         }
         input.value = bin2txt(binary.slice((oglen+1)*16));
