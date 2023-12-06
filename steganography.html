@@ -116,9 +116,11 @@
                 txtlen = parseInt(bin2txt(binary.slice(16)));
             }
         } 
+        console.log(oglen, txtlen);
         if (!Number.isInteger(oglen)) {
             return;
         }
+        console.log(binary);
         input.value = bin2txt(binary.slice((oglen+1)*16));
     }
     function txt2bin(char) {
