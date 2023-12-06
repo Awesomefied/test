@@ -37,7 +37,7 @@
 <script>
    //(255).toString(2) parseInt(11111111, 2)
     var image = [];
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { colorSpace: "srgb" });
     var filename = "";
     function charlimit() {
         if (image.length == 0) {
@@ -68,10 +68,9 @@
         img.onload = function() {
             canvas.width = img.width;
             canvas.height = img.height;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, img.width, img.height);
+            ctx.clearRect(0, 0, img.width, img.height);
+            ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, img.width, img.height);
             const imageData = ctx.getImageData(0, 0, img.width, img.height, { colorSpace: "srgb" });
-            console.log(JSON.stringify(imageData.data));
             for (let i = 0; i < imageData.data.length; i += 4) {
                 const red = imageData.data[i];
                 const green = imageData.data[i + 1];
