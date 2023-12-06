@@ -111,6 +111,7 @@
                 binary += image[i][0].toString(2).slice(-1)+image[i][1].toString(2).slice(-1);
             }
             if (i == 7) {
+                console.log(oglen);
                 oglen = parseInt(bin2txt(binary));
             } else if (i == 8*(oglen+1)-1) {
                 txtlen = parseInt(bin2txt(binary.slice(16)));
