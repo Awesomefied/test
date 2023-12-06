@@ -71,7 +71,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, img.width, img.height);
             const imageData = ctx.getImageData(0, 0, img.width, img.height, { colorSpace: "srgb" });
-            console.log(imageData);
+            console.log(JSON.stringify(imageData.data));
             for (let i = 0; i < imageData.data.length; i += 4) {
                 const red = imageData.data[i];
                 const green = imageData.data[i + 1];
